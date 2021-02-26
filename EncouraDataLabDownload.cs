@@ -13,7 +13,7 @@ namespace EncouraDataLabs
     class Program
     {
 
-
+        //Global Variables
         private static String EncouraUrl = "https://api.datalab.nrccua.org/v1/login";
         private static String EncouraApiKey = ""; //Your Encoura API Key
         private static String EncouraOrganizationUid = ""; //Your Encoura Organization UID
@@ -21,7 +21,8 @@ namespace EncouraDataLabs
         private static String EncouraUsername = ""; // Your Encoura Username
         private static String EncouraPassword = ""; // Your Encoura Password
         private static String strSessionToken = "";
-
+        
+        //Set true to show debugging output, false to hide
         private const bool DEBUG = true;
 
         static void Main(string[] args)
@@ -93,6 +94,8 @@ namespace EncouraDataLabs
                                     // Exit script if no files to download
                                     return;
                                 }
+                                
+                                //Get file uid
                                 String strFileUid = objFileUid["uid"].ToString();
                                 using (HttpRequestMessage fileDownloadRequest = new HttpRequestMessage(new HttpMethod("GET"), "https://api.datalab.nrccua.org/v1/datacenter/exports/" + strFileUid + "/download/"))
                                 {
@@ -100,8 +103,9 @@ namespace EncouraDataLabs
                                     fileDownloadRequest.Headers.Add("Authorization", "JWT " + strSessionToken);
                                     fileDownloadRequest.Headers.Add("Organization", EncouraOrganizationUid);
 
+                                    //Get URL from file uid
                                     HttpResponseMessage fileDownloadResponse = httpClient.SendAsync(fileDownloadRequest).Result;
-
+                                
                                     string strDownloadResponseString = JsonConvert.SerializeObject(fileDownloadResponse.Content.ReadAsStringAsync(), Formatting.Indented);
                                     JObject objDownloadResponseJson = JObject.Parse(strDownloadResponseString);
                                     String strDownloadJsonResponse = objDownloadResponseJson["Result"].ToString();
@@ -114,12 +118,15 @@ namespace EncouraDataLabs
                                         string strDownloadUrl = objDownloadUrlJson["downloadUrl"].ToString();
 
                                         if (DEBUG) Debug.WriteLine("URL = " + strDownloadUrl);
-
+   
+                                        //Submit web request to download and store the file.
                                         using (WebClient wc = new WebClient())
                                         {
                                             string downloadPath = Path.GetFullPath(DownloadDirectory);
                                             Uri uri = new Uri(strDownloadUrl);
+                                            //Get original file name
                                             String filePath = downloadPath + System.IO.Path.GetFileName(uri.LocalPath);
+                                            //Download and store the file
                                             wc.DownloadFile(new System.Uri(strDownloadUrl), (filePath).ToString());
                                         }
                                     }
